@@ -16,7 +16,7 @@ pl_environ(term_t list, void* handle)
   { case PL_FIRST_CALL:
         if ( !(ctx = malloc(sizeof *ctx)) )
           return PL_resource_error("memory");
-        first = TRUE ;
+        ctx->first = TRUE ;
         break;
     case PL_REDO:
         ctx = PL_foreign_context_address(handle);
