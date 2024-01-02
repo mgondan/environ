@@ -58,12 +58,12 @@ pl_environ(term_t list, void* handle)
   }
 
   // We succeed without a choice point */
-  if (!ctx->first)
+  if (ctx->first == FALSE)
   { free(ctx);
     return TRUE;
   }
 
-  first = TRUE ;
+  ctx->first = TRUE ;
   // We succeed with a choice point */
   PL_retry_address(ctx);
 }
