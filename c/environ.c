@@ -1,70 +1,63 @@
 #include <SWI-Prolog.h>
 #include <string.h>
 
-typedef struct                  /* define a context structure */
-{ int first;
+typedef struct  
+{ char** ep;
 } context;
 
 static functor_t FUNCTOR_equal2;
 #define MAXNAME 512
 
 static foreign_t
-pl_environ(term_t list, void* handle)
+pl_environ(term_t result, void* handle)
 {
+  extern char **environ;
+
   context* ctx;
-  switch( PL_foreign_control(handle) )
+  switch(PL_foreign_control(handle))
   { case PL_FIRST_CALL:
-        if ( !(ctx = malloc(sizeof *ctx)) )
+        if (!(ctx = malloc(sizeof *ctx)))
           return PL_resource_error("memory");
-        ctx->first = TRUE ;
+        ctx->ep = environ;
         break;
     case PL_REDO:
         ctx = PL_foreign_context_address(handle);
         break;
     case PL_PRUNED:
         ctx = PL_foreign_context_address(handle);
-        // Nothing this time
         free(ctx);
         return TRUE;
   }
 
-  extern char **environ;
-  term_t tail = PL_copy_term_ref(list);
-  term_t head = PL_new_term_ref();
-  char **ep;
+  if(*(ctx->ep) == NULL)
+  {  /* No environment variables defined, fail (1) */
+    free(ctx);
+    return(FALSE);
+  }
 
-  for(ep=environ; *ep; ep++)
-  { char *e = *ep;
-    char *en;
+  char *e = *(ctx->ep);
+  char *en;
+  if((en=strchr(e, '=')) && en-e < MAXNAME)
+  { char name[MAXNAME];
+    strncpy(name, e, en-e);
+    name[en-e] = 0;
 
-    if ( (en=strchr(e, '=')) && en-e < MAXNAME )
-    { char name[MAXNAME];
-
-      strncpy(name, e, en-e);
-      name[en-e] = 0;
-
-      if ( !PL_unify_list(tail, head, tail) ||
-	   !PL_unify_term(head, PL_FUNCTOR, FUNCTOR_equal2,
-			    PL_MBCHARS, name,
-			    PL_MBCHARS, en+1) )
-	free(ctx) ;
-	return FALSE;
+    if(!PL_unify_term(result, PL_FUNCTOR, FUNCTOR_equal2,
+      PL_MBCHARS, name, PL_MBCHARS, en+1))
+    { free(ctx);
+      return FALSE;
     }
   }
 
-  if(!PL_unify_nil(tail))
-  { free(ctx) ;
-    return FALSE;
-  }
-
-  // We succeed without a choice point */
-  if (ctx->first == FALSE)
+  /* This check is somehow redundant with (1), but avoids a choice 
+     point when no variables are left. */
+  ctx->ep++;
+  if(*(ctx->ep) == NULL)
   { free(ctx);
-    return TRUE;
+    return(TRUE);
   }
 
-  ctx->first = TRUE ;
-  // We succeed with a choice point */
+  /* We succeed with a choice point */
   PL_retry_address(ctx);
 }
 
