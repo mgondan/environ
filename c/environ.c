@@ -11,7 +11,7 @@ static functor_t FUNCTOR_equal2;
 static foreign_t
 pl_environ(term_t list, void* handle)
 {
-  struct context* ctx;
+  context* ctx;
   switch( PL_foreign_control(handle) )
   { case PL_FIRST_CALL:
         if ( !(ctx = malloc(sizeof *ctx)) )
