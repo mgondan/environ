@@ -4,6 +4,7 @@ project(swipl-pack-environ)
 # Include swipl.cmake from the running SWI-Prolog's home
 list(INSERT CMAKE_MODULE_PATH 0 $ENV{SWIPL_HOME_DIR}/cmake)
 include(swipl)
+set(CMAKE_C_STANDARD 11) # see comment in environ.c
 
 # Create the library as a CMake module
 add_library(environ MODULE c/environ.c)
