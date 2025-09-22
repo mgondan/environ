@@ -5,7 +5,7 @@ static functor_t FUNCTOR_equal2;
 #define MAXNAME 512
 
 static foreign_t
-pl_environ(term_t list)
+pl_environ(term_t list) # cast to pl_function_t requires C11
 { extern char **environ;
   term_t tail = PL_copy_term_ref(list);
   term_t head = PL_new_term_ref();
